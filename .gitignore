@@ -1,0 +1,7 @@
+/dist/2017-09-29-123413-pylambda_newsapi_org.zip
+/config.yaml
+/**/*.pyc
+/venv
+/tmp
+/*.log
+/.idea
