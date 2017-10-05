@@ -3,6 +3,7 @@ import boto3
 import json
 import logging
 import os
+import random
 import requests
 from lxml import etree
 from datetime import datetime
@@ -22,22 +23,22 @@ def handler(event, context):
     payload = {'source': os.environ['source'], 'sortBy': 'latest', 'apiKey': os.environ['apiKey']}
     request = requests.get(articles_url, params=payload)
     
-    first_article = request.json()['articles'][0]
+    article = random.choice(request.json()['articles'])
     
     root = etree.Element("Root")
     data_items = etree.SubElement(root, "DataItems")
-    etree.SubElement(data_items, "DataItem", description=first_article['description'])
-    etree.SubElement(data_items, "DataItem", title=first_article['title'])
-    etree.SubElement(data_items, "DataItem", author=first_article['author'])
+    etree.SubElement(data_items, "DataItem", description=article['description'])
+    etree.SubElement(data_items, "DataItem", title=article['title'])
+    if article['author']:
+      etree.SubElement(data_items, "DataItem", author=article['author'])
 
     from_zone = tz.gettz('UTC')
     to_zone = tz.gettz('Asia/Calcutta')
-    utc = datetime.strptime(first_article['publishedAt'], '%Y-%m-%dT%H:%M:%SZ')
+    utc = datetime.strptime(article['publishedAt'], '%Y-%m-%dT%H:%M:%SZ')
     utc = utc.replace(tzinfo=from_zone)
     ist = utc.astimezone(to_zone)
     
     etree.SubElement(data_items, "DataItem", published_at=ist.strftime('%b %d, %Y'))
-    etree.write(root, encoding='UTF-16', xml_declaration=True)
 
   except Exception, e:
     logger.exception("lambda_handler caught error")
@@ -46,10 +47,11 @@ def handler(event, context):
     etree.SubElement(data_items, "DataItem", description=str(e))
     raise
   finally:
-    print(etree.tostring(root, pretty_print=True))
+    xml = etree.tostring(root, pretty_print=True, xml_declaration=True, encoding='UTF-16')
+    print(xml)
     s3 = boto3.resource('s3')
     s3.Bucket('the-shire').put_object(Key='message_board/newsapi.xml',
-                                      Body=etree.tostring(root, pretty_print=True),
+                                      Body=xml,
                                       ContentType='text/xml',
                                       ACL='public-read',
                                       ContentEncoding='UTF-16')
