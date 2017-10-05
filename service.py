@@ -47,7 +47,7 @@ def handler(event, context):
     etree.SubElement(data_items, "DataItem", description=str(e))
     raise
   finally:
-    xml = etree.tostring(root, pretty_print=True, xml_declaration=True, encoding='UTF-16')
+    xml = etree.tostring(root, pretty_print=True, xml_declaration=True, encoding='ISO-8859-1')
     print(xml)
     s3 = boto3.resource('s3')
     s3.Bucket('the-shire').put_object(Key='message_board/newsapi.xml',
