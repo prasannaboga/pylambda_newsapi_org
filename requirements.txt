@@ -12,7 +12,7 @@ futures==3.0.5
 idna==2.6
 ipaddress==1.0.18
 jmespath==0.9.0
-lxml==4.0.0
+lxml==4.6.3
 pyaml==15.8.2
 pycparser==2.18
 pyOpenSSL==17.3.0
